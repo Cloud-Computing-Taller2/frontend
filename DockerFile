@@ -1,0 +1,20 @@
+
+FROM node:26-alpine 
+
+WORKDIR /app
+
+RUN npm install --global pnpm@12
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig*.json nest-cli.json ./
+COPY src ./src
+COPY contracts ./contracts
+
+RUN pnpm run build && rm -rf src tsconfig*.json nest-cli.json
+RUN pnpm prune --production
+
+EXPOSE 5173
+
+CMD ["./node_modules/.bin/srvx", "--prod", "-s", "../client", "dist/server/server.js"]
